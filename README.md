@@ -13,11 +13,6 @@ A Figma plugin that allows you to quickly switch between variable collection mod
 
 ## Installation
 
-### From Figma Community (Recommended)
-1. Visit the [Figma Community page](#) (link coming soon)
-2. Click "Install" to add it to your plugins
-3. Access it from Plugins → Theme Mode Switcher
-
 ### Manual Installation (Developers)
 1. Clone this repository
 2. Open Figma Desktop
@@ -60,6 +55,8 @@ The plugin is designed to work with cascading theme collections:
 - 🌈 Theme 2 (extends Theme)
 - 🌈 Theme 3 (extends Theme 2)
 - 🌈 Theme 4 (extends Theme 3)
+- 🌈 Theme 5 (extends Theme 4)
+- 🌈 Theme 6 (extends Theme 5)
 
 ## Customization
 
@@ -68,9 +65,12 @@ You can customize the color indicators by modifying the `logoConfigData` object 
 
 ```javascript
 var logoConfigData = {
-  "Light": "#FFFFFF",
-  "Dark": "#000000",
-  "Brand": "#0066CC",
+  "Shop Old": "#EF4056",
+  "Shop": "#E40138",
+  "Commercial": "#384ED8",
+  "Service Hub": "#384ED8",
+  "Car": "#87CEEB",
+  "Super Coin": "#F9BC00",
   // Add your theme colors here
 };
 ```
@@ -147,9 +147,15 @@ This project is licensed under the GNU General Public License v3.0 (GPLv3) - see
 
 **Author**: Pooya Kamel  
 **License**: GPLv3  
-**Version**: 1.0.0
+**Version**: 1.1.0
 
 ## Changelog
+
+### v1.1.0 (Latest)
+- Added support for 🌈 Theme 5 and 🌈 Theme 6 collections
+- Added new theme options: Service Hub, Car, and Super Coin
+- Enhanced cascading theme mode support for Theme 6
+- Updated color configurations for theme indicators
 
 ### v1.0.0 (Initial Release)
 - Theme switching functionality
