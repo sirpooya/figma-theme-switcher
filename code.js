@@ -11,8 +11,8 @@ figma.ui.onmessage = async (msg) => {
       
       console.log(`Looking for mode "${selectedMode}" in theme collections`);
       
-      // Find theme collections (🌈 Theme, 🌈 Theme 2, 🌈 Theme 3, 🌈 Theme 4, 🌈 Theme 5, 🌓 Mode, 💻 Device)
-      const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌓 Mode', '💻 Device'];
+      // Find theme collections (🌈 Theme, 🌈 Theme 2, 🌈 Theme 3, 🌈 Theme 4, 🌈 Theme 5, 🌈 Theme 6, 🌓 Mode, 💻 Device)
+      const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌈 Theme 6', '🌓 Mode', '💻 Device'];
       
       let applied = false;
       let appliedCollections = [];
@@ -152,7 +152,7 @@ figma.ui.onmessage = async (msg) => {
         console.log("Resetting page level modes to default...");
         
         // Work with the theme collections we know about
-        const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌓 Mode', '💻 Device'];
+        const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌈 Theme 6', '🌓 Mode', '💻 Device'];
         
         for (const themeCollectionName of themeCollectionNames) {
           try {
@@ -225,6 +225,15 @@ async function applyCascadingModes(sourceCollection, selectedMode) {
       await setThemeMode('🌈 Theme 3', 'Theme 4');
       await setThemeMode('🌈 Theme 4', 'Theme 5');
       console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3, 🌈 Theme 3 → Theme 4, 🌈 Theme 4 → Theme 5');
+      
+    } else if (sourceCollection === '🌈 Theme 6') {
+      // Set 🌈 Theme to "Theme 2", 🌈 Theme 2 to "Theme 3", 🌈 Theme 3 to "Theme 4", 🌈 Theme 4 to "Theme 5", and 🌈 Theme 5 to "Theme 6"
+      await setThemeMode('🌈 Theme', 'Theme 2');
+      await setThemeMode('🌈 Theme 2', 'Theme 3');
+      await setThemeMode('🌈 Theme 3', 'Theme 4');
+      await setThemeMode('🌈 Theme 4', 'Theme 5');
+      await setThemeMode('🌈 Theme 5', 'Theme 6');
+      console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3, 🌈 Theme 3 → Theme 4, 🌈 Theme 4 → Theme 5, 🌈 Theme 5 → Theme 6');
     }
     
   } catch (error) {
