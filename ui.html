@@ -25,13 +25,83 @@
       max-height: 300px;
       padding: 16px;
       padding-bottom: 4px;
+      position: relative;
     }
     
     .loading {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       text-align: center;
       padding: 20px;
-      color: #666666;
+      color: var(--figma-color-text);
       font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      z-index: 1000;
+    }
+    
+    body[data-theme="dark"] .loading,
+    .loading.dark {
+      background: rgba(0, 0, 0, 0.7);
+    }
+    
+    .spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--figma-color-border-disabled);
+      border-top-color: var(--figma-color-text);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    .loading-dots {
+      display: inline-block;
+      width: 1.2em;
+      text-align: left;
+    }
+    
+    .loading-dots::after {
+      content: '.';
+      animation: dots 1.5s steps(3, end) infinite;
+    }
+    
+    @keyframes dots {
+      0%, 20% {
+        content: '.';
+      }
+      40% {
+        content: '..';
+      }
+      60%, 100% {
+        content: '...';
+      }
+    }
+    
+    .loading-subtitle {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary);
+    }
+    
+    .loading-text-group {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      align-items: center;
     }
     
     .content {
@@ -112,7 +182,7 @@
     }
     
     .dropdown-button:hover {
-      border-color: #0066cc;
+      border-color: #bbb;
     }
     
     .dropdown-button:focus {
@@ -328,7 +398,11 @@
 <body>
   <div class="container">
     <div id="loading" class="loading">
-      <div>🔄 Loading variable collections...</div>
+      <div class="spinner"></div>
+      <div class="loading-text-group">
+        <div>Loading variable collections<span class="loading-dots"></span></div>
+        <div class="loading-subtitle">This may take a moment on first launch</div>
+      </div>
     </div>
     
     <div id="content" class="content" style="display: none;">
