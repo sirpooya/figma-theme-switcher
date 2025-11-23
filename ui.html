@@ -603,6 +603,10 @@
       
       closeDropdown();
       updateApplyButton();
+      // Focus Apply button after dropdown closes
+      setTimeout(function() {
+        applyButton.focus();
+      }, 0);
     }
     
     function openDropdown() {
