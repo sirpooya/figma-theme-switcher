@@ -1,5 +1,5 @@
 // Show the plugin UI with increased height to accommodate dropdown
-figma.showUI(__html__, { width: 300, height: 300, themeColors: true });
+figma.showUI(__html__, { width: 260, height: 248, themeColors: true });
 
 let collectionsData = [];
 
