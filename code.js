@@ -9,71 +9,27 @@ figma.ui.onmessage = async (msg) => {
     try {
       const selectedMode = (msg.data.overrideVariable && msg.data.overrideVariable.value) || msg.data.selectedMode;
       
-      console.log(`Looking for mode "${selectedMode}" in theme collections`);
+      console.log(`Applying theme "${selectedMode}"`);
       
-      // Find theme collections (🌈 Theme, 🌈 Theme 2, 🌈 Theme 3, 🌈 Theme 4, 🌈 Theme 5, 🌈 Theme 6, 🌓 Mode, 💻 Device)
-      const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌈 Theme 6', '🌓 Mode', '💻 Device'];
+      // Only "🌈 Theme" gets the value; "🌈 Theme ②" is unused for these
+      const THEME_1_ONLY = ['Shop', 'Commercial', 'Plus', 'AI', 'Gold', 'Mehr', 'Super Coin', 'Fashion'];
+      // Set "🌈 Theme" to "↳ Theme 2" and "🌈 Theme ②" to the selected value
+      const THEME_2_BRANCH = ['Fresh', 'Jet', 'Pharmacy', 'Digipay', 'Fidibo', 'Digify', 'Car', 'Service Hub', 'Void'];
       
+      const currentPage = figma.currentPage;
+      const selection = figma.currentPage.selection;
       let applied = false;
-      let appliedCollections = [];
-      let sourceCollection = null;
       
-      for (const themeCollectionName of themeCollectionNames) {
-        try {
-          // Find the collection in our loaded data
-          const themeCollection = collectionsData.find(c => c.name === themeCollectionName);
-          
-          if (!themeCollection) {
-            console.log(`Collection "${themeCollectionName}" not found in loaded collections`);
-            continue;
-          }
-          
-          // Find the mode in this collection
-          const mode = themeCollection.modes.find(m => m.name === selectedMode);
-          
-          if (!mode) {
-            console.log(`Mode "${selectedMode}" not found in collection "${themeCollectionName}"`);
-            continue;
-          }
-          
-          console.log(`Found mode "${selectedMode}" in collection "${themeCollectionName}"`);
-          sourceCollection = themeCollectionName;
-          
-          // Get the actual collection object
-          const collection = await figma.variables.getVariableCollectionByIdAsync(themeCollection.id);
-          
-          if (!collection) {
-            console.log(`Could not get collection object for "${themeCollectionName}"`);
-            continue;
-          }
-          
-          // Apply mode based on selection
-          const currentPage = figma.currentPage;
-          const selection = figma.currentPage.selection;
-          
-          if (selection.length > 0) {
-            // Apply to selected nodes
-            for (const node of selection) {
-              node.setExplicitVariableModeForCollection(collection.id, mode.id);
-            }
-            console.log(`Applied "${selectedMode}" mode to ${selection.length} selected node(s) from collection "${themeCollectionName}"`);
-          } else {
-            // Apply to page level only
-            currentPage.setExplicitVariableModeForCollection(collection.id, mode.id);
-            console.log(`Applied "${selectedMode}" mode to page from collection "${themeCollectionName}"`);
-          }
-          appliedCollections.push(themeCollectionName);
-          applied = true;
-          break; // Found and applied, exit loop
-          
-        } catch (error) {
-          console.log(`Error applying mode from "${themeCollectionName}": ${error.message}`);
-        }
-      }
-      
-      // Apply cascading theme modes based on source collection
-      if (applied && sourceCollection) {
-        await applyCascadingModes(sourceCollection, selectedMode);
+      if (THEME_1_ONLY.includes(selectedMode)) {
+        // Only set "🌈 Theme" to the selected value
+        applied = await applyModeToCollection('🌈 Theme', selectedMode, currentPage, selection);
+        if (applied) console.log(`Applied "${selectedMode}" to 🌈 Theme only`);
+      } else if (THEME_2_BRANCH.includes(selectedMode)) {
+        // Set "🌈 Theme" to "↳ Theme 2" and "🌈 Theme ②" to selected value
+        const ok1 = await applyModeToCollection('🌈 Theme', '↳ Theme 2', currentPage, selection);
+        const ok2 = await applyModeToCollection('🌈 Theme ②', selectedMode, currentPage, selection);
+        applied = ok1 && ok2;
+        if (applied) console.log(`Applied 🌈 Theme → "↳ Theme 2", 🌈 Theme ② → "${selectedMode}"`);
       }
       
       if (applied) {
@@ -85,10 +41,10 @@ figma.ui.onmessage = async (msg) => {
           message: '' // Empty message since we're using figma.notify instead
         });
       } else {
-        figma.notify(`❌ Mode "${selectedMode}" not found in theme collections`, { error: true });
+        figma.notify(`❌ "${selectedMode}" is not a known theme option`, { error: true });
         figma.ui.postMessage({
           type: 'error',
-          message: `Mode "${selectedMode}" not found in any theme collections`
+          message: `"${selectedMode}" is not a known theme option`
         });
       }
       
@@ -152,7 +108,7 @@ figma.ui.onmessage = async (msg) => {
         console.log("Resetting page level modes to default...");
         
         // Work with the theme collections we know about
-        const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', '🌈 Theme 4', '🌈 Theme 5', '🌈 Theme 6', '🌓 Mode', '💻 Device'];
+        const themeCollectionNames = ['🌈 Theme', '🌈 Theme ②', '🌓 Mode', '💻 Device'];
         
         for (const themeCollectionName of themeCollectionNames) {
           try {
@@ -193,99 +149,35 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 
-// Function to apply cascading theme modes
-async function applyCascadingModes(sourceCollection, selectedMode) {
+// Apply a specific mode to a collection (page or selection). Returns true if applied.
+async function applyModeToCollection(collectionName, modeName, currentPage, selection) {
   try {
-    console.log(`Applying cascading modes from source: "${sourceCollection}"`);
-    
-    const currentPage = figma.currentPage;
-    
-    if (sourceCollection === '🌈 Theme 2') {
-      // Set 🌈 Theme to "Theme 2"
-      await setThemeMode('🌈 Theme', 'Theme 2');
-      console.log('Applied cascading: 🌈 Theme → Theme 2');
-      
-    } else if (sourceCollection === '🌈 Theme 3') {
-      // Set 🌈 Theme to "Theme 2" and 🌈 Theme 2 to "Theme 3"
-      await setThemeMode('🌈 Theme', 'Theme 2');
-      await setThemeMode('🌈 Theme 2', 'Theme 3');
-      console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3');
-      
-    } else if (sourceCollection === '🌈 Theme 4') {
-      // Set 🌈 Theme to "Theme 2", 🌈 Theme 2 to "Theme 3", and 🌈 Theme 3 to "Theme 4"
-      await setThemeMode('🌈 Theme', 'Theme 2');
-      await setThemeMode('🌈 Theme 2', 'Theme 3');
-      await setThemeMode('🌈 Theme 3', 'Theme 4');
-      console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3, 🌈 Theme 3 → Theme 4');
-      
-    } else if (sourceCollection === '🌈 Theme 5') {
-      // Set 🌈 Theme to "Theme 2", 🌈 Theme 2 to "Theme 3", 🌈 Theme 3 to "Theme 4", and 🌈 Theme 4 to "Theme 5"
-      await setThemeMode('🌈 Theme', 'Theme 2');
-      await setThemeMode('🌈 Theme 2', 'Theme 3');
-      await setThemeMode('🌈 Theme 3', 'Theme 4');
-      await setThemeMode('🌈 Theme 4', 'Theme 5');
-      console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3, 🌈 Theme 3 → Theme 4, 🌈 Theme 4 → Theme 5');
-      
-    } else if (sourceCollection === '🌈 Theme 6') {
-      // Set 🌈 Theme to "Theme 2", 🌈 Theme 2 to "Theme 3", 🌈 Theme 3 to "Theme 4", 🌈 Theme 4 to "Theme 5", and 🌈 Theme 5 to "Theme 6"
-      await setThemeMode('🌈 Theme', 'Theme 2');
-      await setThemeMode('🌈 Theme 2', 'Theme 3');
-      await setThemeMode('🌈 Theme 3', 'Theme 4');
-      await setThemeMode('🌈 Theme 4', 'Theme 5');
-      await setThemeMode('🌈 Theme 5', 'Theme 6');
-      console.log('Applied cascading: 🌈 Theme → Theme 2, 🌈 Theme 2 → Theme 3, 🌈 Theme 3 → Theme 4, 🌈 Theme 4 → Theme 5, 🌈 Theme 5 → Theme 6');
-    }
-    
-  } catch (error) {
-    console.log(`Error in cascading modes: ${error.message}`);
-  }
-}
-
-// Helper function to set a specific theme mode
-async function setThemeMode(collectionName, modeName) {
-  try {
-    // Find the collection in our loaded data
     const themeCollection = collectionsData.find(c => c.name === collectionName);
-    
     if (!themeCollection) {
-      console.log(`Collection "${collectionName}" not found for cascading`);
-      return;
+      console.log(`Collection "${collectionName}" not found`);
+      return false;
     }
-    
-    // Find the mode in this collection
     const mode = themeCollection.modes.find(m => m.name === modeName);
-    
     if (!mode) {
-      console.log(`Mode "${modeName}" not found in collection "${collectionName}" for cascading`);
-      return;
+      console.log(`Mode "${modeName}" not found in collection "${collectionName}"`);
+      return false;
     }
-    
-    // Get the actual collection object
     const collection = await figma.variables.getVariableCollectionByIdAsync(themeCollection.id);
-    
     if (!collection) {
-      console.log(`Could not get collection object for "${collectionName}" for cascading`);
-      return;
+      console.log(`Could not get collection object for "${collectionName}"`);
+      return false;
     }
-    
-    // Apply mode based on selection (same logic as main apply)
-    const currentPage = figma.currentPage;
-    const selection = figma.currentPage.selection;
-    
     if (selection.length > 0) {
-      // Apply to selected nodes
       for (const node of selection) {
         node.setExplicitVariableModeForCollection(collection.id, mode.id);
       }
     } else {
-      // Apply to page level
       currentPage.setExplicitVariableModeForCollection(collection.id, mode.id);
     }
-    
-    console.log(`Cascading: Applied "${modeName}" mode to "${collectionName}"`);
-    
+    return true;
   } catch (error) {
-    console.log(`Error setting cascading mode for "${collectionName}": ${error.message}`);
+    console.log(`Error applying "${modeName}" to "${collectionName}": ${error.message}`);
+    return false;
   }
 }
 
