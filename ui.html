@@ -476,7 +476,7 @@
     
     <div class="buttons">
       <button class="button button-secondary" id="reset">Reset</button>
-      <button class="button button-primary" id="apply-mode" disabled>Apply</button>
+      <button class="button button-primary" id="apply-mode" disabled style="display: none;">Apply</button>
     </div>
     
     <div id="status" class="status"></div>
@@ -505,23 +505,30 @@
     var highlightedIndex = -1;
     var isSearchMode = false;
     var logoConfigData = {
+      // 🌈 Theme 1
       "Shop": "#E40138",
       "Commercial": "#384ED8",
       "Plus": "#B12BA4",
       "AI": "#7F53EF",
       "Gold": "#027275",
-      "Fresh": "#05BA58",
-      "Pharmacy": "#007EAA",
-      "Jet": "#FF5E1F",
-      "Fidibo": "#695E4F",
-      "Digipay": "#0040FF",
       "Mehr": "#059675",
-      "Void": "#0A0A0A",
-      "Digify": "#6929C4",
-      "Service Hub": "#384ED8",
-      "Car": "#87CEEB",
       "Super Coin": "#F9BC00",
-      "Fashion": "#888888"
+      "Fashion": "#888888",
+      
+      // 🌈 Theme 2  
+      "Fresh": "#05BA58",
+      "Jet": "#FF5E1F",
+      "Pharmacy": "#007EAA",
+      "Digipay": "#0040FF",
+      "Fidibo": "#695E4F",
+      "Digify": "#6929C4",
+      "Car": "#87CEEB",
+      "Service Hub": "#384ED8",
+      "Void": "#0A0A0A",
+      
+      // 🌈 Theme 3
+      "Seller": "#D86B00",
+      "Fast": "#1028FF"
     };
     
     function loadLogoConfig() {
@@ -536,8 +543,12 @@
       }
       
       allOptions = [
+        // 🌈 Theme 1
         'Shop', 'Commercial', 'Plus', 'AI', 'Gold', 'Mehr', 'Super Coin', 'Fashion',
-        'Fresh', 'Jet', 'Pharmacy', 'Digipay', 'Fidibo', 'Digify', 'Car', 'Service Hub', 'Void'
+        // 🌈 Theme 2
+        'Fresh', 'Jet', 'Pharmacy', 'Digipay', 'Fidibo', 'Digify', 'Car', 'Service Hub', 'Void',
+        // 🌈 Theme 3
+        'Seller', 'Fast'
       ];
       
       filteredOptions = allOptions.slice();
@@ -590,6 +601,20 @@
       renderDropdownItems();
     }
     
+    function applyThemeFromSelection() {
+      if (!selectedMode) return;
+      applyButton.disabled = true;
+      applyButton.textContent = 'Applying...';
+      parent.postMessage({
+        pluginMessage: {
+          type: 'apply-theme-mode',
+          data: {
+            selectedMode: selectedMode
+          }
+        }
+      }, '*');
+    }
+    
     function selectOption(value, colorHex) {
       selectedMode = value;
       
@@ -602,9 +627,9 @@
       
       closeDropdown();
       updateApplyButton();
-      // Focus Apply button after dropdown closes
+      applyThemeFromSelection();
       setTimeout(function() {
-        applyButton.focus();
+        dropdownButton.focus();
       }, 0);
     }
     
@@ -711,19 +736,7 @@
     });
     
     applyButton.addEventListener('click', function() {
-      if (!selectedMode) return;
-      
-      applyButton.disabled = true;
-      applyButton.textContent = 'Applying...';
-      
-      parent.postMessage({ 
-        pluginMessage: { 
-          type: 'apply-theme-mode',
-          data: {
-            selectedMode: selectedMode
-          }
-        } 
-      }, '*');
+      applyThemeFromSelection();
     });
     
     resetButton.addEventListener('click', function() {

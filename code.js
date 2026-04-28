@@ -11,25 +11,51 @@ figma.ui.onmessage = async (msg) => {
       
       console.log(`Applying theme "${selectedMode}"`);
       
-      // Only "🌈 Theme" gets the value; "🌈 Theme ②" is unused for these
+      // Theme 1: only "🌈 Theme" is set to the chosen mode
       const THEME_1_ONLY = ['Shop', 'Commercial', 'Plus', 'AI', 'Gold', 'Mehr', 'Super Coin', 'Fashion'];
-      // Set "🌈 Theme" to "↳ Theme 2" and "🌈 Theme ②" to the selected value
+      // Theme 2: "🌈 Theme" → ↳ Theme 2, "🌈 Theme 2" → chosen mode (e.g. Fresh)
       const THEME_2_BRANCH = ['Fresh', 'Jet', 'Pharmacy', 'Digipay', 'Fidibo', 'Digify', 'Car', 'Service Hub', 'Void'];
+      // Theme 3: cascade all three collections (Seller, Fast)
+      const THEME_3_BRANCH = ['Seller', 'Fast'];
+      // Light / Dark live in the Mode collection (name may be "Mode" or "🌓 Mode" in the file)
+      const MODE_ONLY = ['Light', 'Dark'];
+      // Desktop / Mobile live in 💻 Device (fallback: "Device")
+      const DEVICE_ONLY = ['Desktop', 'Mobile'];
       
       const currentPage = figma.currentPage;
       const selection = figma.currentPage.selection;
       let applied = false;
       
       if (THEME_1_ONLY.includes(selectedMode)) {
-        // Only set "🌈 Theme" to the selected value
         applied = await applyModeToCollection('🌈 Theme', selectedMode, currentPage, selection);
         if (applied) console.log(`Applied "${selectedMode}" to 🌈 Theme only`);
       } else if (THEME_2_BRANCH.includes(selectedMode)) {
-        // Set "🌈 Theme" to "↳ Theme 2" and "🌈 Theme ②" to selected value
         const ok1 = await applyModeToCollection('🌈 Theme', '↳ Theme 2', currentPage, selection);
-        const ok2 = await applyModeToCollection('🌈 Theme ②', selectedMode, currentPage, selection);
+        const ok2 = await applyModeToCollection('🌈 Theme 2', selectedMode, currentPage, selection);
         applied = ok1 && ok2;
-        if (applied) console.log(`Applied 🌈 Theme → "↳ Theme 2", 🌈 Theme ② → "${selectedMode}"`);
+        if (applied) console.log(`Applied 🌈 Theme → "↳ Theme 2", 🌈 Theme 2 → "${selectedMode}"`);
+      } else if (THEME_3_BRANCH.includes(selectedMode)) {
+        const ok1 = await applyModeToCollection('🌈 Theme', '↳ Theme 2', currentPage, selection);
+        const ok2 = await applyModeToCollection('🌈 Theme 2', '↳ Theme 3', currentPage, selection);
+        const ok3 = await applyModeToCollection('🌈 Theme 3', selectedMode, currentPage, selection);
+        applied = ok1 && ok2 && ok3;
+        if (applied) console.log(`Applied 🌈 Theme → "↳ Theme 2", 🌈 Theme 2 → "↳ Theme 3", 🌈 Theme 3 → "${selectedMode}"`);
+      } else if (MODE_ONLY.includes(selectedMode)) {
+        applied = await applyModeToFirstCollection(
+          ['Mode', '🌓 Mode'],
+          selectedMode,
+          currentPage,
+          selection
+        );
+        if (applied) console.log(`Applied "${selectedMode}" to Mode collection`);
+      } else if (DEVICE_ONLY.includes(selectedMode)) {
+        applied = await applyModeToFirstCollection(
+          ['💻 Device', 'Device'],
+          selectedMode,
+          currentPage,
+          selection
+        );
+        if (applied) console.log(`Applied "${selectedMode}" to Device collection`);
       }
       
       if (applied) {
@@ -108,7 +134,7 @@ figma.ui.onmessage = async (msg) => {
         console.log("Resetting page level modes to default...");
         
         // Work with the theme collections we know about
-        const themeCollectionNames = ['🌈 Theme', '🌈 Theme ②', '🌓 Mode', '💻 Device'];
+        const themeCollectionNames = ['🌈 Theme', '🌈 Theme 2', '🌈 Theme 3', 'Mode', '🌓 Mode', '💻 Device', 'Device'];
         
         for (const themeCollectionName of themeCollectionNames) {
           try {
@@ -149,6 +175,15 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 
+/** Try several collection names (first match wins). Returns true if applied. */
+async function applyModeToFirstCollection(collectionNames, modeName, currentPage, selection) {
+  for (var i = 0; i < collectionNames.length; i++) {
+    var ok = await applyModeToCollection(collectionNames[i], modeName, currentPage, selection);
+    if (ok) return true;
+  }
+  return false;
+}
+
 // Apply a specific mode to a collection (page or selection). Returns true if applied.
 async function applyModeToCollection(collectionName, modeName, currentPage, selection) {
   try {
@@ -157,7 +192,11 @@ async function applyModeToCollection(collectionName, modeName, currentPage, sele
       console.log(`Collection "${collectionName}" not found`);
       return false;
     }
-    const mode = themeCollection.modes.find(m => m.name === modeName);
+    let mode = themeCollection.modes.find(m => m.name === modeName);
+    if (!mode) {
+      const lower = modeName.toLowerCase();
+      mode = themeCollection.modes.find(m => m.name.toLowerCase() === lower);
+    }
     if (!mode) {
       console.log(`Mode "${modeName}" not found in collection "${collectionName}"`);
       return false;
